@@ -56,6 +56,16 @@ var initDb = function(callback) {
   });
 };
 
+app.get("/lp21/:id",function(request, response){
+    var id = request.params.id;
+    // do something with id
+    // send a response to user based on id
+    var obj = { id : id, Content : "lp21  " +id };
+
+    response.writeHead(200, {"Content-Type": "application/json"});
+    response.write(JSON.stringify(obj));
+});
+
 app.get('/', function (req, res) {
   // try to initialize the db on every request if it's not already
   // initialized.
