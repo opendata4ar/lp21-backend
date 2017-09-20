@@ -40,10 +40,11 @@ const qCitiesByUser = {
 
 const qCities = {
 	  name: 'get-all-cities',
-	  text: 'SELECT * FROM city',
+	  text: 'SELECT * FROM city ORDER BY label',
 	}
 
 app.get("/lp21/city/:id",function(httpRequest, httpResponse){
+  var start = Date.now();
   var kanton_id = httpRequest.params.id;
   if (kanton_id == undefined || kanton_id < 1 ) {
 	var sql = qCities;
@@ -72,12 +73,12 @@ app.get("/lp21/city/:id",function(httpRequest, httpResponse){
       // Matches only the 10.. bytes that are non-initial characters in a multi-byte sequence.
       var utf8ExtraLength = encodeURIComponent(jsonResult).match(/%[89ABab]/g);
       var contentLength = jsonResult.length + (utf8ExtraLength ? utf8ExtraLength.length : 0);
-      console.log("len="+jsonResult.length+" or (utf-8) "+contentLength+"?\n"+jsonResult);
-
       httpResponse.header('Content-Length', contentLength);
       httpResponse.header('Transfer-Encoding', '');
       httpResponse.writeHead(200, {"Content-Type": "application/json"});
       httpResponse.write(jsonResult);
+      var end = Date.now();
+      console.log("served " + contentLength+" of kanton_id=" + kanton_id + " in " + (end-start) + " ms");
     }
    })   
 });
