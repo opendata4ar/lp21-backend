@@ -18,9 +18,9 @@ const client = new Client({
 
 client.connect((err) => {
   if (err) {
-    console.error('connection error', err.stack);
+    console.error(new Date().toISOString() + ' connection lost', err.stack);
   } else {
-    console.log('connected to DB at ' + client.host);
+    console.log(new Date().toISOString() + ' connected to DB at ' + client.host);
   }
 })
 /**
@@ -49,12 +49,13 @@ app.get("/lp21/school/:id",function(httpRequest, httpResponse){
       var jsonResult = JSON.stringify(sqlResult.rows);
       httpResponse.header("Access-Control-Allow-Origin", "*");
       var contentLength = tools.lengthInUtf8Bytes(jsonResult);
-      httpResponse.header('Content-Length', contentLength);
-      httpResponse.header('Transfer-Encoding', '');
+      //httpResponse.header('Content-Length', contentLength);
+      //httpResponse.header('Transfer-Encoding', '');
       httpResponse.writeHead(200, {"Content-Type": "application/json"});
-      httpResponse.write(jsonResult);
+      httpResponse.write(jsonResult,'utf8');
+      httpResponse.end();
       var end = Date.now();
-      console.log("served " + contentLength + " bytes of " + httpRequest.url + " in " + (end-start) + " ms");
+      console.log(new Date().toISOString() + " served " + contentLength + " bytes of " + httpRequest.url + " in " + (end-start) + " ms");
     }
   })
 }); 
@@ -107,9 +108,10 @@ app.get("/lp21/city/:id",function(httpRequest, httpResponse){
       httpResponse.header('Content-Length', contentLength);
       httpResponse.header('Transfer-Encoding', '');
       httpResponse.writeHead(200, {"Content-Type": "application/json"});
-      httpResponse.write(jsonResult);
+      httpResponse.write(jsonResult,'utf8');
+      httpResponse.end();
       var end = Date.now();
-      console.log("served " + contentLength + " bytes of " + httpRequest.url + " in " + (end-start) + " ms");
+      console.log(new Date().toISOString() + " served " + contentLength + " bytes of " + httpRequest.url + " in " + (end-start) + " ms");
     }
    })   
 });
@@ -139,6 +141,6 @@ app.use(function(error, req, res, next){
 
 
 app.listen(myport, myip);
-console.log('Server running on http://%s:%s', myip, myport);
+console.log(new Date().toISOString() + ' Server running on http://%s:%s', myip, myport);
 
 module.exports = app ;
