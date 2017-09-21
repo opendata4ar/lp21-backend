@@ -1,6 +1,7 @@
 const express = require('express')
 const app = express()
 var format = require('pg-format')
+var tools = require('./backend-helper');
 
 const myport = 8081
 const myip   = '0.0.0.0'
@@ -22,7 +23,30 @@ client.connect((err) => {
     console.log('connected to DB at ' + client.host);
   }
 })
+/**
+ * School
+ */
+const qSchoolsByCity = {
+  name: 'get-schools-by-city',
+  text: 'SELECT * FROM school WHERE city_id = $1 ORDER BY label',
+  values: [404]
+}
 
+app.get("/lp21/school/:id",function(httpRequest, httpResponse){
+  var start = Date.now();
+  var city_id = httpRequest.params.id;
+  if (city_id == undefined || city_id < 1 ) {
+	var sql = undefined;
+  } else {
+	qSchoolsByCity.values = [city_id];
+	var sql = qSchoolsByCity;
+  }
+}); 
+  
+  
+/**
+ * City
+ */
 const qCitiesByState = {
   // give the query a *unique* name
   name: 'get-cities-by-state',
@@ -32,7 +56,7 @@ const qCitiesByState = {
 }
 
 const qCitiesByUser = {
-	  name: 'get-cities-by-state', // id isNaN
+	  name: 'get-cities-by-user', // id isNaN
 	  text: "SELECT * FROM city, ... WHERE email = '$1'",
 	  //rowMode: 'array',
 	  values: ['opendata4ar@gmail.com']
@@ -52,15 +76,9 @@ app.get("/lp21/city/:id",function(httpRequest, httpResponse){
 	qCitiesByState.values = [kanton_id];
 	var sql = qCitiesByState;
   }
-  //qCities.values = [kanton_id];
   client.query(sql, (sqlError, sqlResult) => {
-    if (sqlError) { console.log(sqlError.stack);
-      httpResponse.header("Access-Control-Allow-Origin", "*");
-	  var errMsg = "{'errorMessage': '" + sqlError.message + "', 'errorStack': '" + sqlError.stack + "'}";
-      httpResponse.header('Content-Length', errMsg.length);
-      httpResponse.header('Transfer-Encoding', '');
-      httpResponse.writeHead(500, {"Content-Type": "application/json"});
-      httpResponse.write(errMsg);  
+    if (sqlError) {
+      tools.onError(sqlError, httpRequest, httpResponse);
 
     } else { //console.log(sqlResult.rows)
       //TODO: transform to <li>? var obj = { id : kanton_id, Content : "lp21  " +id };
@@ -85,15 +103,10 @@ app.get("/lp21/city/:id",function(httpRequest, httpResponse){
 
 
 
-
 client.on('notice', (msg) => console.warn('notice:', msg))
 client.on('error', (error) => {
-  console.error('something bad has happened!', error.stack)
-  var errMsg = "{'errorMessage': '" + error.message + "', 'errorStack': '" + error.stack + "'}";
-  httpResponse.header('Content-Length', errMsg.length);
-  httpResponse.header('Transfer-Encoding', '');
-  httpResponse.writeHead(500, {"Content-Type": "application/json"});
-  httpResponse.write(errMsg);  
+  tools.onError(error, null);  
+
 })
 
 /*
@@ -107,12 +120,8 @@ client.end((err) => {
 
 // error handling
 app.use(function(error, req, res, next){
-  console.error(error.stack);
-  var errMsg = "{'errorMessage': '" + error.message + "', 'errorStack': '" + error.stack + "'}";
-  httpResponse.header('Content-Length', errMsg.length);
-  httpResponse.header('Transfer-Encoding', '');
-  httpResponse.writeHead(500, {"Content-Type": "application/json"});
-  httpResponse.write(errMsg);  
+  tools.onError(error, req, res);  
+
 });
 
 
