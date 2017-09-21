@@ -41,6 +41,22 @@ app.get("/lp21/school/:id",function(httpRequest, httpResponse){
 	qSchoolsByCity.values = [city_id];
 	var sql = qSchoolsByCity;
   }
+  client.query(sql, (sqlError, sqlResult) => {
+    if (sqlError) {
+      tools.onError(sqlError, httpRequest, httpResponse);
+    } else {
+      //console.debug(sqlResult.rows);
+      var jsonResult = JSON.stringify(sqlResult.rows);
+      httpResponse.header("Access-Control-Allow-Origin", "*");
+      var contentLength = tools.lengthInUtf8Bytes(jsonResult);
+      httpResponse.header('Content-Length', contentLength);
+      httpResponse.header('Transfer-Encoding', '');
+      httpResponse.writeHead(200, {"Content-Type": "application/json"});
+      httpResponse.write(jsonResult);
+      var end = Date.now();
+      console.log("served " + contentLength + " bytes of " + httpRequest.url + " in " + (end-start) + " ms");
+    }
+  })
 }); 
   
   
@@ -69,6 +85,7 @@ const qCities = {
 
 app.get("/lp21/city/:id",function(httpRequest, httpResponse){
   var start = Date.now();
+  //for testing slow connections tools.pause(4000);
   var kanton_id = httpRequest.params.id;
   if (kanton_id == undefined || kanton_id < 1 ) {
 	var sql = qCities;
@@ -80,23 +97,19 @@ app.get("/lp21/city/:id",function(httpRequest, httpResponse){
     if (sqlError) {
       tools.onError(sqlError, httpRequest, httpResponse);
 
-    } else { //console.log(sqlResult.rows)
+    } else { 
+      //console.debug(sqlResult.rows);
       //TODO: transform to <li>? var obj = { id : kanton_id, Content : "lp21  " +id };
       var jsonResult = JSON.stringify(sqlResult.rows);
       httpResponse.header("Access-Control-Allow-Origin", "*");
       
-      // Need to set Content-Length explicitly just to avoid Transfer-Encoding: chunked
-      //JS string.length does not account for utf-8 encoding
-      // see https://stackoverflow.com/questions/5515869/string-length-in-bytes-in-javascript
-      // Matches only the 10.. bytes that are non-initial characters in a multi-byte sequence.
-      var utf8ExtraLength = encodeURIComponent(jsonResult).match(/%[89ABab]/g);
-      var contentLength = jsonResult.length + (utf8ExtraLength ? utf8ExtraLength.length : 0);
+      var contentLength = tools.lengthInUtf8Bytes(jsonResult);
       httpResponse.header('Content-Length', contentLength);
       httpResponse.header('Transfer-Encoding', '');
       httpResponse.writeHead(200, {"Content-Type": "application/json"});
       httpResponse.write(jsonResult);
       var end = Date.now();
-      console.log("served " + contentLength+" of kanton_id=" + kanton_id + " in " + (end-start) + " ms");
+      console.log("served " + contentLength + " bytes of " + httpRequest.url + " in " + (end-start) + " ms");
     }
    })   
 });
