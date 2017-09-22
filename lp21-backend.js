@@ -1,5 +1,8 @@
-const express = require('express')
+const express = require('express'), bodyParser = require('body-parser');
 const app = express()
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
 var format = require('pg-format')
 var tools = require('./backend-helper');
 
@@ -23,6 +26,7 @@ client.connect((err) => {
     console.log(new Date().toISOString() + ' connected to DB at ' + client.host);
   }
 })
+
 /**
  * School
  */
@@ -60,6 +64,35 @@ app.get("/lp21/school/:id", function(httpRequest, httpResponse) {
       console.log(new Date().toISOString() + " served " + contentLength + " bytes of " + httpRequest.url + " in " + (end - start) + " ms");
     }
   })
+});
+
+app.options("/lp21/school", function(httpRequest, httpResponse) {
+  // for cross domain requests with body content only sent by chrome
+  httpResponse.writeHead(200, {
+    // "Access-Control-Allow-Origin" : "*" allow in dev only!!!
+  });
+  httpResponse.end();
+});
+
+
+app.post("/lp21/school", function(httpRequest, httpResponse) {
+  var start = Date.now();
+  var label = httpRequest.body.label;
+  if (httpRequest.body == undefined) {
+    return httpResponse.sendStatus(400);
+  } else {
+    console.log(new Date().toISOString() + " got " + httpRequest.body.label);
+    httpResponse.header("Access-Control-Allow-Origin", "*");
+    httpResponse.writeHead(200, {
+      "Content-Type" : "application/json"
+    });
+    var content = '{"school_id": "' + '-1' + '"}';
+    httpResponse.write(content, 'utf8');
+    httpResponse.end();
+    var end = Date.now();
+    console.log(new Date().toISOString() + " served " + content.length + " bytes of " + httpRequest.url + " in " + (end - start) + " ms"); 
+  }
+
 });
 
 
