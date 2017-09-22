@@ -22,12 +22,12 @@ module.exports = {
       httpResponse.write(errMsgForClient);
     }
   },
-  
-  pause: function (millis)
-  {
-      var date = new Date();
-      var curDate = null;
-      do { curDate = new Date(); }
-      while(curDate-date < millis);
+
+  pause : function(millis) {
+    var date = new Date();
+    var curDate = null;
+    do {
+      curDate = new Date();
+    } while (curDate - date < millis);
   }
 }

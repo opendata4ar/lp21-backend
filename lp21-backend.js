@@ -4,16 +4,16 @@ var format = require('pg-format')
 var tools = require('./backend-helper');
 
 const myport = 8081
-const myip   = '0.0.0.0'
+const myip = '0.0.0.0'
 
-const { Client } = require('pg');
+const {Client} = require('pg');
 
 const client = new Client({
-  host: 'lp21.cyi5isrniwic.eu-west-1.rds.amazonaws.com',
-  port: 5432,
-  user: 'lp21',
-  password: 'Lehrplan21',
-  database: 'lp21'
+  host : 'lp21.cyi5isrniwic.eu-west-1.rds.amazonaws.com',
+  port : 5432,
+  user : 'lp21',
+  password : 'Lehrplan21',
+  database : 'lp21'
 })
 
 client.connect((err) => {
@@ -27,19 +27,19 @@ client.connect((err) => {
  * School
  */
 const qSchoolsByCity = {
-  name: 'get-schools-by-city',
-  text: 'SELECT * FROM school WHERE city_id = $1 ORDER BY label',
-  values: [404]
+  name : 'get-schools-by-city',
+  text : 'SELECT * FROM school WHERE city_id = $1 ORDER BY label',
+  values : [ 404 ]
 }
 
-app.get("/lp21/school/:id",function(httpRequest, httpResponse){
+app.get("/lp21/school/:id", function(httpRequest, httpResponse) {
   var start = Date.now();
   var city_id = httpRequest.params.id;
-  if (city_id == undefined || city_id < 1 ) {
-	var sql = undefined;
+  if (city_id == undefined || city_id < 1) {
+    var sql = undefined;
   } else {
-	qSchoolsByCity.values = [city_id];
-	var sql = qSchoolsByCity;
+    qSchoolsByCity.values = [ city_id ];
+    var sql = qSchoolsByCity;
   }
   client.query(sql, (sqlError, sqlResult) => {
     if (sqlError) {
@@ -51,76 +51,80 @@ app.get("/lp21/school/:id",function(httpRequest, httpResponse){
       var contentLength = tools.lengthInUtf8Bytes(jsonResult);
       //httpResponse.header('Content-Length', contentLength);
       //httpResponse.header('Transfer-Encoding', '');
-      httpResponse.writeHead(200, {"Content-Type": "application/json"});
-      httpResponse.write(jsonResult,'utf8');
+      httpResponse.writeHead(200, {
+        "Content-Type" : "application/json"
+      });
+      httpResponse.write(jsonResult, 'utf8');
       httpResponse.end();
       var end = Date.now();
-      console.log(new Date().toISOString() + " served " + contentLength + " bytes of " + httpRequest.url + " in " + (end-start) + " ms");
+      console.log(new Date().toISOString() + " served " + contentLength + " bytes of " + httpRequest.url + " in " + (end - start) + " ms");
     }
   })
-}); 
-  
-  
+});
+
+
 /**
  * City
  */
 const qCitiesByState = {
   // give the query a *unique* name
-  name: 'get-cities-by-state',
-  text: 'SELECT * FROM city WHERE kanton_id = $1',
+  name : 'get-cities-by-state',
+  text : 'SELECT * FROM city WHERE kanton_id = $1',
   //rowMode: 'array',
-  values: [21]
+  values : [ 21 ]
 }
 
 const qCitiesByUser = {
-	  name: 'get-cities-by-user', // id isNaN
-	  text: "SELECT * FROM city, ... WHERE email = '$1'",
-	  //rowMode: 'array',
-	  values: ['opendata4ar@gmail.com']
-	}
+  name : 'get-cities-by-user', // id isNaN
+  text : "SELECT * FROM city, ... WHERE email = '$1'",
+  //rowMode: 'array',
+  values : [ 'opendata4ar@gmail.com' ]
+}
 
 const qCities = {
-	  name: 'get-all-cities',
-	  text: 'SELECT * FROM city ORDER BY label',
-	}
+  name : 'get-all-cities',
+  text : 'SELECT * FROM city ORDER BY label',
+}
 
-app.get("/lp21/city/:id",function(httpRequest, httpResponse){
+app.get("/lp21/city/:id", function(httpRequest, httpResponse) {
   var start = Date.now();
   //for testing slow connections tools.pause(4000);
   var kanton_id = httpRequest.params.id;
-  if (kanton_id == undefined || kanton_id < 1 ) {
-	var sql = qCities;
+  if (kanton_id == undefined || kanton_id < 1) {
+    var sql = qCities;
   } else {
-	qCitiesByState.values = [kanton_id];
-	var sql = qCitiesByState;
+    qCitiesByState.values = [ kanton_id ];
+    var sql = qCitiesByState;
   }
   client.query(sql, (sqlError, sqlResult) => {
     if (sqlError) {
       tools.onError(sqlError, httpRequest, httpResponse);
 
-    } else { 
+    } else {
       //console.debug(sqlResult.rows);
       //TODO: transform to <li>? var obj = { id : kanton_id, Content : "lp21  " +id };
       var jsonResult = JSON.stringify(sqlResult.rows);
       httpResponse.header("Access-Control-Allow-Origin", "*");
-      
+
       var contentLength = tools.lengthInUtf8Bytes(jsonResult);
       httpResponse.header('Content-Length', contentLength);
       httpResponse.header('Transfer-Encoding', '');
-      httpResponse.writeHead(200, {"Content-Type": "application/json"});
-      httpResponse.write(jsonResult,'utf8');
+      httpResponse.writeHead(200, {
+        "Content-Type" : "application/json"
+      });
+      httpResponse.write(jsonResult, 'utf8');
       httpResponse.end();
       var end = Date.now();
-      console.log(new Date().toISOString() + " served " + contentLength + " bytes of " + httpRequest.url + " in " + (end-start) + " ms");
+      console.log(new Date().toISOString() + " served " + contentLength + " bytes of " + httpRequest.url + " in " + (end - start) + " ms");
     }
-   })   
+  })
 });
 
 
 
 client.on('notice', (msg) => console.warn('notice:', msg))
 client.on('error', (error) => {
-  tools.onError(error, null);  
+  tools.onError(error, null);
 
 })
 
@@ -134,8 +138,8 @@ client.end((err) => {
 */
 
 // error handling
-app.use(function(error, req, res, next){
-  tools.onError(error, req, res);  
+app.use(function(error, req, res, next) {
+  tools.onError(error, req, res);
 
 });
 
