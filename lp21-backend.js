@@ -15,7 +15,7 @@ const client = new Client({
   host : 'lp21.cyi5isrniwic.eu-west-1.rds.amazonaws.com',
   port : 5432,
   user : 'lp21',
-  password : 'Lehrplan21',
+  password : 'Leh*******',
   database : 'lp21'
 })
 
@@ -74,25 +74,40 @@ app.options("/lp21/school", function(httpRequest, httpResponse) {
   httpResponse.end();
 });
 
+const qAddSchool = {
+    name : "add-school",
+    text : "INSERT INTO school (id,label,kind,city_id,kanton_id) VALUES  (nextval('school_seq'), '$1', '$2', $3, $4) RETURNING id",
+    values : [ 'unknown', null, 0, 27 ]
+}
 
 app.post("/lp21/school", function(httpRequest, httpResponse) {
   var start = Date.now();
-  var label = httpRequest.body.label;
   if (httpRequest.body == undefined) {
     return httpResponse.sendStatus(400);
   } else {
-    console.log(new Date().toISOString() + " got " + httpRequest.body.label);
-    httpResponse.header("Access-Control-Allow-Origin", "*");
-    httpResponse.writeHead(200, {
+    var label = httpRequest.body.label;
+    var kind = httpRequest.body.kind;
+    var cityFk = httpRequest.body.city_id;
+    var kantonFk = httpRequest.body.kanton_id;
+    console.log(new Date().toISOString() + " got new school " + label + " " + kind + " " + cityFk, + " " + kantonFk);
+    var sql = qAddSchool;
+    sql.values = [ label, kind, cityFk, kantonFk ];
+    client.query(sql, (sqlError, sqlResult) => {
+    if (sqlError) {
+      tools.onError(sqlError, httpRequest, httpResponse);
+    } else {
+      httpResponse.header("Access-Control-Allow-Origin", "*");
+      httpResponse.writeHead(200, {
       "Content-Type" : "application/json"
-    });
-    var content = '{"school_id": "' + '-1' + '"}';
-    httpResponse.write(content, 'utf8');
-    httpResponse.end();
-    var end = Date.now();
-    console.log(new Date().toISOString() + " served " + content.length + " bytes of " + httpRequest.url + " in " + (end - start) + " ms"); 
+      });
+      var jsonResult = JSON.stringify(sqlResult.rows);
+      httpResponse.write(jsonResult, 'utf8');
+      httpResponse.end();
+      var end = Date.now();
+      console.log(new Date().toISOString() + " served " + content.length + " bytes of " + httpRequest.url + " in " + (end - start) + " ms");
+    }
+    });    
   }
-
 });
 
 
